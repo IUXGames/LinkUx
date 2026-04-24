@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkUx — Documentación Oficial</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="resources/Logo.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="resources/Logo.png" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+</head>
+<body>
+
+  <!-- ── Site Header ──────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-logo" href="#introduccion">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184.08 180.92" aria-hidden="true">
+          <path fill="#8435c4" d="M50.67,180.92c-21.41,0-46.67-16-50.25-40.34-1.57-10.67,1.32-22.12,8.12-32.25.33-.49.7-.96,1.11-1.39l20.1-21.1c4-4.2,10.65-4.36,14.85-.36,4.2,4,4.36,10.65.36,14.85l-19.45,20.4c-2.25,3.53-5.34,9.86-4.32,16.78,1.97,13.41,18.05,23.02,30.58,22.36,7.94-.42,14.13-6.35,30.85-23.42,15.1-15.41,22.96-23.95,22.54-34.45-.24-5.93-2.92-11.88-7.98-17.7-3.81-4.37-3.35-11.01,1.03-14.81,4.37-3.81,11.01-3.35,14.81,1.03,8.16,9.38,12.7,19.97,13.12,30.64.8,20.05-12.14,33.26-28.52,49.98-18.2,18.58-28.22,28.81-44.73,29.69-.74.04-1.48.06-2.23.06Z"/>
+          <path fill="#8435c4" d="M78.98,113.98c-2.93,0-5.85-1.22-7.92-3.61-8.16-9.38-12.7-19.97-13.12-30.64-.8-20.05,12.14-33.26,28.52-49.98C104.66,11.17,114.68.94,131.18.06c21.85-1.17,48.78,15.09,52.48,40.28,1.57,10.67-1.32,22.12-8.12,32.25-.33.49-.7.96-1.11,1.39l-20.1,21.1c-4,4.2-10.65,4.36-14.84.36-4.2-4-4.36-10.65-.36-14.84l19.45-20.4c2.25-3.53,5.34-9.86,4.32-16.78-1.97-13.41-18.07-23.03-30.58-22.36-7.94.42-14.12,6.35-30.84,23.41-15.1,15.42-22.96,23.95-22.54,34.45.24,5.93,2.92,11.88,7.98,17.69,3.81,4.37,3.35,11.01-1.03,14.81-1.99,1.73-4.44,2.58-6.89,2.58Z"/>
+        </svg>
+        <div class="site-logo__text">
+          <span class="site-logo__name">LinkUx</span>
+          <span class="site-logo__sub">Documentación</span>
+        </div>
+      </a>
+
+      <div class="site-header__doc-chrome" id="header-doc-chrome"></div>
+
+      <a class="site-github" id="site-github-link" href="https://github.com/IUXGames/LinkUx" target="_blank" rel="noopener noreferrer" aria-label="LinkUx en GitHub">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+
+      <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Overlay para cerrar el sidebar en móvil ───────── -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── DocShell container ────────────────────────────── -->
+  <div id="docs"></div>
+
+  <!-- ── Scripts ───────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@4/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="docsShell/hljs-gdscript-register.js"></script>
+  <script src="docsShell/doc-shell.js"></script>
+  <script src="docsShell/doc-shell-search.js"></script>
+
+  <script>
+    const SITE_UI = {
+      es: {
+        docTitle: 'LinkUx — Documentación oficial',
+        copyLabel: 'Copiar',
+        copiedLabel: '¡Copiado!',
+        searchPlaceholder: 'Buscar en la documentación…',
+        searchNoResults: 'Sin resultados.',
+        searchAria: 'Buscar en la documentación',
+        navAria: 'Documentación',
+        langAria: 'Selector de idioma',
+        menuOpen: 'Abrir menú de navegación',
+        menuClose: 'Cerrar menú de navegación',
+        githubAria: 'LinkUx en GitHub',
+        typeLabels: {
+          h1: 'Título', h2: 'Título', h3: 'Título', h4: 'Título', h5: 'Título', h6: 'Título',
+          text: 'Texto', code: 'Código', table: 'Tabla',
+        },
+      },
+      en: {
+        docTitle: 'LinkUx — Official documentation',
+        copyLabel: 'Copy',
+        copiedLabel: 'Copied!',
+        searchPlaceholder: 'Search the docs…',
+        searchNoResults: 'No results.',
+        searchAria: 'Search documentation',
+        navAria: 'Documentation',
+        langAria: 'Language selector',
+        menuOpen: 'Open navigation menu',
+        menuClose: 'Close navigation menu',
+        githubAria: 'LinkUx on GitHub',
+        typeLabels: {
+          h1: 'Heading', h2: 'Heading', h3: 'Heading', h4: 'Heading', h5: 'Heading', h6: 'Heading',
+          text: 'Text', code: 'Code', table: 'Table',
+        },
+      },
+    };
+
+    function applySiteLanguage(lang) {
+      const s = SITE_UI[lang] || SITE_UI.en;
+      document.documentElement.lang = lang;
+      document.title = s.docTitle;
+      document.getElementById('site-github-link')?.setAttribute('aria-label', s.githubAria);
+      const menuBtn = document.getElementById('menu-toggle');
+      if (menuBtn) {
+        const open = menuBtn.classList.contains('is-open');
+        menuBtn.setAttribute('aria-label', open ? s.menuClose : s.menuOpen);
+      }
+      if (typeof ds !== 'undefined' && ds.setCopyLabels) {
+        ds.setCopyLabels({ copyLabel: s.copyLabel, copiedLabel: s.copiedLabel });
+        ds.setChromeStrings({ navAriaLabel: s.navAria, langSwitcherAriaLabel: s.langAria });
+      }
+      if (typeof search !== 'undefined' && search.setStrings) {
+        search.setStrings({
+          placeholder: s.searchPlaceholder,
+          noResultsText: s.searchNoResults,
+          searchAriaLabel: s.searchAria,
+          typeLabels: s.typeLabels,
+        });
+      }
+    }
+
+    let search;
+
+    /** En vista móvil, la búsqueda y el idioma viven en el sidebar (junto al menú hamburguesa). */
+    function relocateHeaderDocChrome() {
+      const header = document.getElementById('header-doc-chrome');
+      const mobile = document.querySelector('.ds-mobile-chrome');
+      if (!header || !mobile) return;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (isMobile) {
+        while (header.firstChild) mobile.appendChild(header.firstChild);
+      } else {
+        while (mobile.firstChild) header.appendChild(mobile.firstChild);
+      }
+    }
+
+    const ds = new DocShell({
+      container: '#docs',
+      langs: {
+        es: 'docs/es.md',
+        en: 'docs/en.md',
+      },
+      defaultLang: 'es',
+      headerChrome: '#header-doc-chrome',
+      copyLabel:   SITE_UI.es.copyLabel,
+      copiedLabel: SITE_UI.es.copiedLabel,
+      navAriaLabel: SITE_UI.es.navAria,
+      langSwitcherAriaLabel: SITE_UI.es.langAria,
+      onLangChange: (lang) => {
+        applySiteLanguage(lang);
+      },
+    });
+
+    search = new DocShellSearch(ds, {
+      placeholder:   SITE_UI.es.searchPlaceholder,
+      noResultsText: SITE_UI.es.searchNoResults,
+      searchAriaLabel: SITE_UI.es.searchAria,
+      typeLabels: SITE_UI.es.typeLabels,
+      maxResults: 25,
+      snippetLen: 100,
+    });
+
+    ds.on('ready', () => {
+      relocateHeaderDocChrome();
+      search.mount(ds.getSearchSlot());
+      applySiteLanguage(ds.getCurrentLang() || 'es');
+    });
+
+    let relocateChromeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(relocateChromeTimer);
+      relocateChromeTimer = setTimeout(() => {
+        relocateHeaderDocChrome();
+        if (typeof search !== 'undefined' && search.closeDropdown) search.closeDropdown();
+      }, 120);
+    });
+
+    /* ── Mobile sidebar toggle ── */
+    const menuToggle = document.getElementById('menu-toggle');
+    const overlay    = document.getElementById('sidebar-overlay');
+
+    function openSidebar() {
+      const root = document.querySelector('.ds-root');
+      if (root) root.classList.add('sidebar-open');
+      overlay.classList.add('active');
+      menuToggle.classList.add('is-open');
+    }
+
+    function closeSidebar() {
+      const root = document.querySelector('.ds-root');
+      if (root) root.classList.remove('sidebar-open');
+      overlay.classList.remove('active');
+      menuToggle.classList.remove('is-open');
+    }
+
+    menuToggle.addEventListener('click', () => {
+      const root = document.querySelector('.ds-root');
+      if (root && root.classList.contains('sidebar-open')) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+      const lang = (typeof ds !== 'undefined' && ds.getCurrentLang) ? ds.getCurrentLang() : 'es';
+      const s = SITE_UI[lang] || SITE_UI.en;
+      menuToggle.setAttribute('aria-label', menuToggle.classList.contains('is-open') ? s.menuClose : s.menuOpen);
+    });
+
+    overlay.addEventListener('click', closeSidebar);
+
+    /* Close sidebar when a nav link is clicked on mobile */
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth < 768 && e.target.classList.contains('ds-nav-link')) {
+        closeSidebar();
+      }
+    });
+  </script>
+</body>
+</html>
