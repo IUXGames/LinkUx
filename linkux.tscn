@@ -1,0 +1,50 @@
+[gd_scene load_steps=13 format=3 uid="uid://linkux_main"]
+
+[ext_resource type="Script" path="res://addons/linkux/linkux.gd" id="1"]
+[ext_resource type="Script" path="res://addons/linkux/core/network_events.gd" id="2"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/tick_manager.gd" id="3"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/session_manager.gd" id="4"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/authority_manager.gd" id="5"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/state_replicator.gd" id="6"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/rpc_relay.gd" id="7"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/scene_sync.gd" id="8"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/disconnect_handler.gd" id="9"]
+[ext_resource type="Script" path="res://addons/linkux/subsystems/late_join_handler.gd" id="10"]
+[ext_resource type="Script" path="res://addons/linkux/transport/transport_layer.gd" id="11"]
+[ext_resource type="Script" path="res://addons/linkux/optimization/interest_manager.gd" id="12"]
+
+[node name="LinkUx" type="Node"]
+script = ExtResource("1")
+
+[node name="NetworkEvents" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="TickManager" type="Node" parent="."]
+script = ExtResource("3")
+
+[node name="SessionManager" type="Node" parent="."]
+script = ExtResource("4")
+
+[node name="AuthorityManager" type="Node" parent="."]
+script = ExtResource("5")
+
+[node name="StateReplicator" type="Node" parent="."]
+script = ExtResource("6")
+
+[node name="RpcRelay" type="Node" parent="."]
+script = ExtResource("7")
+
+[node name="SceneSync" type="Node" parent="."]
+script = ExtResource("8")
+
+[node name="DisconnectHandler" type="Node" parent="."]
+script = ExtResource("9")
+
+[node name="LateJoinHandler" type="Node" parent="."]
+script = ExtResource("10")
+
+[node name="TransportLayer" type="Node" parent="."]
+script = ExtResource("11")
+
+[node name="InterestManager" type="Node" parent="."]
+script = ExtResource("12")
