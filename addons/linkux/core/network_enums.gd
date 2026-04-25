@@ -4,9 +4,9 @@ extends RefCounted
 
 
 enum BackendType {
-	NONE = -1, ## No backend selected; set one explicitly before creating/joining a session.
-	LAN  =  0,
-	# Add new online backends here (e.g. EOS, Relay, etc.)
+	NONE  = -1, ## No backend selected; set one explicitly before creating/joining a session.
+	LAN   =  0,
+	STEAM =  1, ## Online backend via GodotSteam (SteamMultiplayerPeer + Steam Lobbies).
 }
 
 enum ConnectionState {

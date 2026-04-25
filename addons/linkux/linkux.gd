@@ -54,6 +54,9 @@ var _transport_layer: TransportLayer
 var _active_backend: NetworkBackend
 var _backend_type: int = NetworkEnums.BackendType.NONE
 
+# Steam
+var _steam_initialized: bool = false
+
 ## LAN uses custom binary packets on ENet; disable SceneTree's MultiplayerAPI poll so the engine does not try to decode them as Godot RPCs.
 var _scene_tree_multiplayer_poll_saved: bool = true
 var _scene_tree_multiplayer_poll_overridden: bool = false
@@ -128,6 +131,7 @@ func _ready() -> void:
 # ══════════════════════════════════════════════════════════════════════════════
 
 func initialize(config: LinkUxConfig = null) -> int:
+	await LinkUx.ready
 	_config = config if config else LinkUxConfig.new()
 	if not _config.network: _config.network = NetworkConfig.new()
 	if not _config.lan: _config.lan = LanBackendConfig.new()
@@ -172,8 +176,10 @@ func set_backend(backend_type: int) -> void:
 
 	_backend_type = backend_type
 
-	# Remove old backend if exists
+	# Remove old backend if exists — call shutdown first so signals/connections are cleaned up
+	# synchronously before the new backend is created (queue_free defers the actual deletion).
 	if _active_backend:
+		_active_backend._backend_shutdown()
 		_active_backend.queue_free()
 		_active_backend = null
 
@@ -186,7 +192,15 @@ func set_backend(backend_type: int) -> void:
 			if _config and _config.lan:
 				_active_backend._backend_initialize(_config.lan)
 
-		# Add new backend cases here following the same pattern as LAN above.
+		NetworkEnums.BackendType.STEAM:
+			var steam_backend_script := load("res://addons/linkux/backends/steam/steam_backend.gd")
+			_active_backend = steam_backend_script.new() as NetworkBackend
+			_active_backend.name = "ActiveBackend"
+			add_child(_active_backend)
+			if _config and _config.steam:
+				_active_backend._backend_initialize(_config.steam)
+			else:
+				_active_backend._backend_initialize(null)
 
 	if _active_backend and _transport_layer:
 		var net_config: NetworkConfig = _config.network if _config else null
@@ -201,7 +215,7 @@ func set_backend(backend_type: int) -> void:
 	if _session_manager:
 		_session_manager.update_backend(_active_backend)
 
-	if _backend_type == NetworkEnums.BackendType.LAN:
+	if _backend_type == NetworkEnums.BackendType.LAN or _backend_type == NetworkEnums.BackendType.STEAM:
 		_disable_scene_tree_multiplayer_poll_for_lan()
 
 	_logger.info("Backend set: %s" % _get_backend_name(), "Core")
@@ -213,6 +227,13 @@ func get_config() -> LinkUxConfig:
 
 func get_protocol_version() -> int:
 	return ProtocolVersion.get_version()
+
+
+static func get_version() -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load("res://addons/linkux/plugin.cfg") == OK:
+		return cfg.get_value("plugin", "version", "unknown")
+	return "unknown"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -234,8 +255,8 @@ func create_session(session_name: String, max_players: int = 16, metadata: Dicti
 	if _active_backend == null:
 		return NetworkEnums.ErrorCode.BACKEND_NOT_SET
 	prepare_for_new_session()
-	## After `close_session`, `multiplayer_poll` is restored; when re-hosting LAN it must be disabled again or the engine treats LinkUx packets as scene RPCs.
-	if _backend_type == NetworkEnums.BackendType.LAN:
+	## After `close_session`, `multiplayer_poll` is restored; when re-hosting LAN/Steam it must be disabled again or the engine treats LinkUx packets as scene RPCs.
+	if _backend_type == NetworkEnums.BackendType.LAN or _backend_type == NetworkEnums.BackendType.STEAM:
 		_disable_scene_tree_multiplayer_poll_for_lan()
 	if _state_machine.is_state(NetworkEnums.InternalState.RUNNING) or _state_machine.is_state(NetworkEnums.InternalState.IN_SESSION) or _state_machine.is_state(NetworkEnums.InternalState.CONNECTING):
 		return NetworkEnums.ErrorCode.ALREADY_IN_SESSION
@@ -253,7 +274,7 @@ func join_session(session_info: SessionInfo) -> int:
 		return NetworkEnums.ErrorCode.BACKEND_NOT_SET
 	prepare_for_new_session()
 	## Same reason as `create_session`: `_init_linkux` does not call `set_backend` if the backend is unchanged, so the poll must be disabled again here.
-	if _backend_type == NetworkEnums.BackendType.LAN:
+	if _backend_type == NetworkEnums.BackendType.LAN or _backend_type == NetworkEnums.BackendType.STEAM:
 		_disable_scene_tree_multiplayer_poll_for_lan()
 	if _state_machine.is_state(NetworkEnums.InternalState.RUNNING) or _state_machine.is_state(NetworkEnums.InternalState.IN_SESSION) or _state_machine.is_state(NetworkEnums.InternalState.CONNECTING):
 		return NetworkEnums.ErrorCode.ALREADY_IN_SESSION
@@ -270,7 +291,7 @@ func join_session_by_room_code(room_code: String) -> int:
 	if _active_backend == null:
 		return NetworkEnums.ErrorCode.BACKEND_NOT_SET
 	prepare_for_new_session()
-	if _backend_type == NetworkEnums.BackendType.LAN:
+	if _backend_type == NetworkEnums.BackendType.LAN or _backend_type == NetworkEnums.BackendType.STEAM:
 		_disable_scene_tree_multiplayer_poll_for_lan()
 	if _state_machine.is_state(NetworkEnums.InternalState.RUNNING) or _state_machine.is_state(NetworkEnums.InternalState.IN_SESSION) or _state_machine.is_state(NetworkEnums.InternalState.CONNECTING):
 		return NetworkEnums.ErrorCode.ALREADY_IN_SESSION
@@ -463,8 +484,46 @@ func is_lan() -> bool:
 
 
 func is_online() -> bool:
-	#return _backend_type != NetworkEnums.BackendType.LAN
+	return _backend_type == NetworkEnums.BackendType.STEAM
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STEAM
+# ══════════════════════════════════════════════════════════════════════════════
+
+## Initializes the Steam API with the given AppID.
+## Writes steam_appid.txt next to the executable (or project root in editor) before calling
+## steamInitEx so Steam's DLL picks up the AppID regardless of project settings.
+## Returns true on success, false if GodotSteam is unavailable or Steam is not running.
+func initialize_steam(app_id: int = 480) -> bool:
+	if _steam_initialized:
+		return true
+	if not ClassDB.class_exists("Steam"):
+		_logger.warn("Steam class not found — GodotSteam GDExtension may not be installed.", "Steam")
+		return false
+	_write_steam_appid_file(app_id)
+	var result: Dictionary = Steam.steamInitEx(false, app_id)
+	if result.get("status") == Steam.STEAM_API_INIT_RESULT_OK:
+		_steam_initialized = true
+		_logger.info("Steam initialized. User: %s (AppID: %d)" % [Steam.getPersonaName(), app_id], "Steam")
+		return true
+	_logger.warn("Steam initialization failed: %s" % result.get("verbal", "unknown"), "Steam")
 	return false
+
+
+## Returns true if Steam was successfully initialized via initialize_steam().
+func is_steam_initialized() -> bool:
+	return _steam_initialized
+
+
+## Returns the display name of the currently logged-in Steam user.
+## Returns an empty string if Steam is not initialized or GodotSteam is unavailable.
+func get_steam_user() -> String:
+	if not _steam_initialized:
+		return ""
+	if not ClassDB.class_exists("Steam"):
+		return ""
+	return Steam.getPersonaName()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -783,10 +842,26 @@ func _cleanup_session() -> void:
 		session_ended.emit()
 
 
+func _write_steam_appid_file(app_id: int) -> void:
+	var path: String
+	if OS.has_feature("editor"):
+		path = ProjectSettings.globalize_path("res://steam_appid.txt")
+	else:
+		path = OS.get_executable_path().get_base_dir().path_join("steam_appid.txt")
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file:
+		file.store_string(str(app_id))
+		file.close()
+		_logger.info("steam_appid.txt written to: %s" % path, "Steam")
+	else:
+		_logger.warn("Could not write steam_appid.txt to: %s (error %d)" % [path, FileAccess.get_open_error()], "Steam")
+
+
 func _get_backend_name() -> String:
 	match _backend_type:
-		NetworkEnums.BackendType.NONE: return "None"
-		NetworkEnums.BackendType.LAN:  return "LAN"
+		NetworkEnums.BackendType.NONE:  return "None"
+		NetworkEnums.BackendType.LAN:   return "LAN"
+		NetworkEnums.BackendType.STEAM: return "Steam"
 		_: return "Unknown"
 
 

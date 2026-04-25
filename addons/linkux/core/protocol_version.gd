@@ -15,9 +15,13 @@ static func is_compatible(remote_version: int) -> bool:
 
 
 static func create_handshake_payload() -> Dictionary:
+	var cfg := ConfigFile.new()
+	var addon_version := "unknown"
+	if cfg.load("res://addons/linkux/plugin.cfg") == OK:
+		addon_version = cfg.get_value("plugin", "version", "unknown")
 	return {
 		"protocol_version": CURRENT_VERSION,
-		"addon_version": "0.2.0",
+		"addon_version": addon_version,
 	}
 
 
