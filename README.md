@@ -112,7 +112,7 @@ func _on_player_joined(_player: PlayerInfo) -> void:
 
 The **official documentation** is a website:
 
-Then open **[EasyChat Official Documentation](https://iuxgames.github.io/LinkUx_WebSite/)** in your browser for the full interactive docs (navigation, **EN / ES** language toggle, and **quick search**).
+Then open **[LinkUx Official Documentation](https://iuxgames.github.io/LinkUx_WebSite/)** in your browser for the full interactive docs (navigation, **EN / ES** language toggle, and **quick search**).
 
 ---
 
