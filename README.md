@@ -166,6 +166,14 @@ addons/linkux/
 
 ## 📝 Changelog
 
+### v2.1.2
+- **Fix:** `initialize()` ya no cuelga cuando es llamado desde `_ready()` de otro autoload.
+  `await LinkUx.ready` reemplazado por `if not is_node_ready(): await ready` para evitar
+  que la señal `ready` (ya emitida) deje la función suspendida indefinidamente.
+  Esto provocaba que la máquina de estados quedara en `INIT` y que `SessionManager`
+  no recibiera su `setup()`, causando `Invalid state transition: INIT -> CONNECTING`
+  y `Nonexistent function 'info' in base 'Nil'` al intentar crear una sesión.
+
 ### v2.1.1
 - **Fix: parse errors on projects without GodotSteam installed** — `linkux.gd` and `steam_backend.gd` previously referenced the `Steam` identifier and the `SteamMultiplayerPeer` type directly, causing GDScript parse errors at addon activation time when GodotSteam GDExtension was not present. All Steam API calls are now resolved at runtime:
   - `Steam.xxx()` calls replaced with a cached `Object` reference obtained via `Engine.get_singleton("Steam")`.
