@@ -3,8 +3,20 @@ extends NetworkBackend
 ## Steam backend using GodotSteam's SteamMultiplayerPeer + Steam Lobbies for matchmaking.
 ## Room codes are 6-character alphanumeric strings stored as lobby metadata.
 ## Fully encapsulates Steam API — no Steam calls are exposed to the user.
+##
+## All direct "Steam.xxx" references are intentionally avoided in this file.
+## Instead, the Steam singleton is resolved at runtime via Engine.get_singleton("Steam")
+## and cached into _steam. This prevents GDScript parse errors when GodotSteam is not
+## installed, since the parser would otherwise reject the unknown "Steam" identifier.
 
-var _peer: SteamMultiplayerPeer
+## Runtime reference to the GodotSteam singleton. Populated in _backend_initialize().
+## Typed as Object so the parser does not need to know about the Steam class at compile time.
+var _steam: Object = null
+
+## Typed as MultiplayerPeer (base class) so SteamMultiplayerPeer is never referenced
+## at parse time. The actual instance is created via ClassDB.instantiate().
+var _peer: MultiplayerPeer
+
 var _config: SteamBackendConfig
 var _is_host: bool = false
 var _local_peer_id: int = -1
@@ -55,6 +67,15 @@ func _backend_initialize(config: Resource) -> Error:
 		_config = config as SteamBackendConfig
 	else:
 		_config = SteamBackendConfig.new()
+
+	# Resolve the Steam singleton at runtime — never reference the "Steam" identifier
+	# directly so this script parses cleanly without GodotSteam installed.
+	if ClassDB.class_exists("Steam"):
+		_steam = Engine.get_singleton("Steam")
+	if _steam == null:
+		push_warning("SteamBackend: GodotSteam is not installed or the Steam singleton is unavailable.")
+		return ERR_UNAVAILABLE
+
 	_connect_steam_signals()
 	return OK
 
@@ -72,6 +93,8 @@ func _exit_tree() -> void:
 
 
 func _backend_create_session(session_name: String, max_players: int, metadata: Dictionary) -> Error:
+	if _steam == null:
+		return ERR_UNAVAILABLE
 	_close_peer()
 	_is_host = true
 	_pending_session_name = session_name
@@ -80,11 +103,13 @@ func _backend_create_session(session_name: String, max_players: int, metadata: D
 	var lobby_type: int = _config.lobby_type
 	if _is_private_session_meta(metadata):
 		lobby_type = 3  # LOBBY_TYPE_INVISIBLE
-	Steam.createLobby(lobby_type, _pending_max_players)
+	_steam.createLobby(lobby_type, _pending_max_players)
 	return OK
 
 
 func _backend_join_session(session_info: SessionInfo) -> Error:
+	if _steam == null:
+		return ERR_UNAVAILABLE
 	_close_peer()
 	var lobby_id: int = int(session_info.backend_data.get("lobby_id", 0))
 	if lobby_id == 0:
@@ -94,11 +119,13 @@ func _backend_join_session(session_info: SessionInfo) -> Error:
 	_client_connect_pending = true
 	_client_connect_started_msec = Time.get_ticks_msec()
 	_room_code = session_info.backend_data.get("room_code", "")
-	Steam.joinLobby(lobby_id)
+	_steam.joinLobby(lobby_id)
 	return OK
 
 
 func _backend_join_session_by_room_code(room_code: String) -> Error:
+	if _steam == null:
+		return ERR_UNAVAILABLE
 	var code := room_code.strip_edges().to_upper()
 	if not _is_valid_room_code(code):
 		return ERR_INVALID_PARAMETER
@@ -108,16 +135,16 @@ func _backend_join_session_by_room_code(room_code: String) -> Error:
 	_client_connect_pending = true
 	_client_connect_started_msec = Time.get_ticks_msec()
 	## Filter lobbies by room code and backend identifier, then request the list.
-	Steam.addRequestLobbyListStringFilter(_LOBBY_KEY_ROOM_CODE, code, 0)   # 0 = LOBBY_COMPARISON_EQUAL
-	Steam.addRequestLobbyListStringFilter(_LOBBY_KEY_BACKEND, _LOBBY_VAL_BACKEND, 0)
-	Steam.requestLobbyList()
+	_steam.addRequestLobbyListStringFilter(_LOBBY_KEY_ROOM_CODE, code, 0)   # 0 = LOBBY_COMPARISON_EQUAL
+	_steam.addRequestLobbyListStringFilter(_LOBBY_KEY_BACKEND, _LOBBY_VAL_BACKEND, 0)
+	_steam.requestLobbyList()
 	return OK
 
 
 func _backend_close_session() -> void:
-	if _lobby_id != 0:
-		Steam.leaveLobby(_lobby_id)
-		_lobby_id = 0
+	if _steam != null and _lobby_id != 0:
+		_steam.leaveLobby(_lobby_id)
+	_lobby_id = 0
 	_close_peer()
 	_is_host = false
 	_local_peer_id = -1
@@ -152,8 +179,10 @@ func _backend_send(peer_id: int, data: PackedByteArray, channel: int, reliable: 
 
 
 func _backend_poll() -> void:
+	if _steam == null:
+		return
 	## Steam callbacks must be pumped manually; embed_callbacks is disabled in this project.
-	Steam.run_callbacks()
+	_steam.run_callbacks()
 
 	if _peer == null:
 		return
@@ -252,14 +281,15 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	_lobby_id = lobby_id
 	_room_code = _generate_room_code()
 
-	Steam.setLobbyData(lobby_id, _LOBBY_KEY_ROOM_CODE, _room_code)
-	Steam.setLobbyData(lobby_id, _LOBBY_KEY_BACKEND, _LOBBY_VAL_BACKEND)
+	_steam.setLobbyData(lobby_id, _LOBBY_KEY_ROOM_CODE, _room_code)
+	_steam.setLobbyData(lobby_id, _LOBBY_KEY_BACKEND, _LOBBY_VAL_BACKEND)
 
-	_peer = SteamMultiplayerPeer.new()
+	# Instantiate SteamMultiplayerPeer by name to avoid a parse-time reference.
+	_peer = ClassDB.instantiate("SteamMultiplayerPeer") as MultiplayerPeer
 	var err: Error = _peer.create_host(0)
 	if err != OK:
 		_close_peer()
-		Steam.leaveLobby(lobby_id)
+		_steam.leaveLobby(lobby_id)
 		_lobby_id = 0
 		_is_host = false
 		backend_connection_failed.emit("Failed to create SteamMultiplayerPeer host (error %d)." % err)
@@ -299,7 +329,7 @@ func _on_lobby_match_list(lobbies: Array) -> void:
 		backend_connection_failed.emit("No lobby found with room code \"%s\"." % _room_code)
 		return
 	## Join the first matching lobby.
-	Steam.joinLobby(int(lobbies[0]))
+	_steam.joinLobby(int(lobbies[0]))
 
 
 func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
@@ -314,7 +344,7 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 
 	_lobby_id = lobby_id
 
-	var host_steam_id: int = Steam.getLobbyOwner(lobby_id)
+	var host_steam_id: int = _steam.getLobbyOwner(lobby_id)
 	if host_steam_id == 0:
 		_client_connect_pending = false
 		_client_connect_started_msec = -1
@@ -323,10 +353,10 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 
 	## Steam P2P does not support connections between two instances sharing the same Steam ID.
 	## This happens when testing host + client on the same machine with the same account.
-	if host_steam_id == Steam.getSteamID():
+	if host_steam_id == _steam.getSteamID():
 		_client_connect_pending = false
 		_client_connect_started_msec = -1
-		Steam.leaveLobby(lobby_id)
+		_steam.leaveLobby(lobby_id)
 		_lobby_id = 0
 		backend_connection_failed.emit(
 			"Cannot connect: host and client share the same Steam ID. " +
@@ -334,11 +364,12 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 		)
 		return
 
-	_peer = SteamMultiplayerPeer.new()
+	# Instantiate SteamMultiplayerPeer by name to avoid a parse-time reference.
+	_peer = ClassDB.instantiate("SteamMultiplayerPeer") as MultiplayerPeer
 	var err: Error = _peer.create_client(host_steam_id, 0)
 	if err != OK:
 		_close_peer()
-		Steam.leaveLobby(lobby_id)
+		_steam.leaveLobby(lobby_id)
 		_lobby_id = 0
 		_client_connect_pending = false
 		backend_connection_failed.emit("Failed to create SteamMultiplayerPeer client (error %d)." % err)
@@ -452,21 +483,21 @@ func _is_valid_room_code(code: String) -> bool:
 
 
 func _connect_steam_signals() -> void:
-	if _steam_signals_connected:
+	if _steam_signals_connected or _steam == null:
 		return
-	Steam.lobby_created.connect(_on_lobby_created)
-	Steam.lobby_match_list.connect(_on_lobby_match_list)
-	Steam.lobby_joined.connect(_on_lobby_joined)
+	_steam.lobby_created.connect(_on_lobby_created)
+	_steam.lobby_match_list.connect(_on_lobby_match_list)
+	_steam.lobby_joined.connect(_on_lobby_joined)
 	_steam_signals_connected = true
 
 
 func _disconnect_steam_signals() -> void:
-	if not _steam_signals_connected:
+	if not _steam_signals_connected or _steam == null:
 		return
-	if Steam.lobby_created.is_connected(_on_lobby_created):
-		Steam.lobby_created.disconnect(_on_lobby_created)
-	if Steam.lobby_match_list.is_connected(_on_lobby_match_list):
-		Steam.lobby_match_list.disconnect(_on_lobby_match_list)
-	if Steam.lobby_joined.is_connected(_on_lobby_joined):
-		Steam.lobby_joined.disconnect(_on_lobby_joined)
+	if _steam.lobby_created.is_connected(_on_lobby_created):
+		_steam.lobby_created.disconnect(_on_lobby_created)
+	if _steam.lobby_match_list.is_connected(_on_lobby_match_list):
+		_steam.lobby_match_list.disconnect(_on_lobby_match_list)
+	if _steam.lobby_joined.is_connected(_on_lobby_joined):
+		_steam.lobby_joined.disconnect(_on_lobby_joined)
 	_steam_signals_connected = false
