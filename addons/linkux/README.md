@@ -1,7 +1,7 @@
 # LinkUx
 
 [![Godot 4](https://img.shields.io/badge/Godot-4.4+-478cbf?logo=godotengine&logoColor=white)](https://godotengine.org/)
-[![Version](https://img.shields.io/badge/version-2.1.0-8435c4)](./plugin.cfg)
+[![Version](https://img.shields.io/badge/version-2.1.1-8435c4)](./plugin.cfg)
 
 **LinkUx** is a **multiplayer abstraction addon** for [**Godot 4**](https://godotengine.org/). It exposes one high-level **Autoload API** (`LinkUx`) while routing traffic through **pluggable backends**—**LAN (ENet)** and **Online (Steam)**—so gameplay code stays the same whether players join over the local network or the internet.
 
@@ -166,6 +166,14 @@ addons/linkux/
 
 ## 📝 Changelog
 
+### v2.1.1
+- **Fix: parse errors on projects without GodotSteam installed** — `linkux.gd` and `steam_backend.gd` previously referenced the `Steam` identifier and the `SteamMultiplayerPeer` type directly, causing GDScript parse errors at addon activation time when GodotSteam GDExtension was not present. All Steam API calls are now resolved at runtime:
+  - `Steam.xxx()` calls replaced with a cached `Object` reference obtained via `Engine.get_singleton("Steam")`.
+  - `Steam.STEAM_API_INIT_RESULT_OK` constant replaced with its numeric value (`0`) to avoid a parse-time class member lookup.
+  - `var _peer: SteamMultiplayerPeer` type annotation changed to `var _peer: MultiplayerPeer` (base class, always available).
+  - `SteamMultiplayerPeer.new()` replaced with `ClassDB.instantiate("SteamMultiplayerPeer") as MultiplayerPeer`.
+- **Behavior unchanged** — if GodotSteam is installed the Steam backend works exactly as before. If it is not installed, `set_backend(STEAM)` returns `ERR_UNAVAILABLE` and a warning is pushed; the LAN backend is unaffected.
+
 ### v2.1.0
 - **New backend: Steam Online** (`NetworkEnums.BackendType.STEAM`) — full online multiplayer via Steam Lobbies and `SteamMultiplayerPeer`. Requires [GodotSteam GDExtension 4.4+](https://godotsteam.com/) by Gramps.
 - **Room codes for online** — 6-character alphanumeric codes (A–Z, 0–9) backed by Steam Lobby metadata for session discovery.
@@ -185,5 +193,5 @@ addons/linkux/
 
 ## 🙏 Credits
 
-- **LinkUx** — **IUX Games**, **Isaackiux** · version **2.1.0** (see [`plugin.cfg`](./plugin.cfg)).
+- **LinkUx** — **IUX Games**, **Isaackiux** · version **2.1.1** (see [`plugin.cfg`](./plugin.cfg)).
 - **GodotSteam** — [Gramps](https://godotsteam.com/) · used as the transport layer for the Steam Online backend.

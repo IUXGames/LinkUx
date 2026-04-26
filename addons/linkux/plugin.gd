@@ -7,13 +7,14 @@ var link_github: String = "[url=https://github.com/IUXGames/LinkUx]Official GitH
 var link_website: String = "[url=https://iuxgames.github.io/LinkUx_WebSite/]Official Documentation WebSite[/url]"
 
 var _sync_inspector_plugin: EditorInspectorPlugin
+var LinkUxAutoload = preload("res://addons/linkux/linkux.gd")
 
 
 func _enter_tree() -> void:
 	var InspectorPluginScript := preload("nodes/editor/linkux_sync_inspector_plugin.gd")
 	_sync_inspector_plugin = InspectorPluginScript.new(self)
 	add_inspector_plugin(_sync_inspector_plugin)
-	print_rich("LinkUx by IUX Games, Isaackiux | %s | %s" % [link_github, link_website])
+	print_rich("LinkUx v%s | %s | %s" % [LinkUxAutoload.get_version(), link_github, link_website])
 
 
 func _exit_tree() -> void:
