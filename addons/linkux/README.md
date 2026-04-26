@@ -1,7 +1,7 @@
 # LinkUx
 
 [![Godot 4](https://img.shields.io/badge/Godot-4.4+-478cbf?logo=godotengine&logoColor=white)](https://godotengine.org/)
-[![Version](https://img.shields.io/badge/version-2.1.1-8435c4)](./plugin.cfg)
+[![Version](https://img.shields.io/badge/version-2.1.2-8435c4)](./plugin.cfg)
 
 **LinkUx** is a **multiplayer abstraction addon** for [**Godot 4**](https://godotengine.org/). It exposes one high-level **Autoload API** (`LinkUx`) while routing traffic through **pluggable backends**—**LAN (ENet)** and **Online (Steam)**—so gameplay code stays the same whether players join over the local network or the internet.
 
@@ -166,6 +166,14 @@ addons/linkux/
 
 ## 📝 Changelog
 
+### v2.1.2
+- **Fix:** `initialize()` ya no cuelga cuando es llamado desde `_ready()` de otro autoload.
+  `await LinkUx.ready` reemplazado por `if not is_node_ready(): await ready` para evitar
+  que la señal `ready` (ya emitida) deje la función suspendida indefinidamente.
+  Esto provocaba que la máquina de estados quedara en `INIT` y que `SessionManager`
+  no recibiera su `setup()`, causando `Invalid state transition: INIT -> CONNECTING`
+  y `Nonexistent function 'info' in base 'Nil'` al intentar crear una sesión.
+
 ### v2.1.1
 - **Fix: parse errors on projects without GodotSteam installed** — `linkux.gd` and `steam_backend.gd` previously referenced the `Steam` identifier and the `SteamMultiplayerPeer` type directly, causing GDScript parse errors at addon activation time when GodotSteam GDExtension was not present. All Steam API calls are now resolved at runtime:
   - `Steam.xxx()` calls replaced with a cached `Object` reference obtained via `Engine.get_singleton("Steam")`.
@@ -193,5 +201,5 @@ addons/linkux/
 
 ## 🙏 Credits
 
-- **LinkUx** — **IUX Games**, **Isaackiux** · version **2.1.1** (see [`plugin.cfg`](./plugin.cfg)).
+- **LinkUx** — **IUX Games**, **Isaackiux** · version **2.1.2** (see [`plugin.cfg`](./plugin.cfg)).
 - **GodotSteam** — [Gramps](https://godotsteam.com/) · used as the transport layer for the Steam Online backend.

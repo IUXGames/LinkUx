@@ -1,50 +1,50 @@
-[gd_scene load_steps=13 format=3 uid="uid://linkux_main"]
+[gd_scene format=3 uid="uid://d33b4q2a15jn5"]
 
-[ext_resource type="Script" path="res://addons/linkux/linkux.gd" id="1"]
-[ext_resource type="Script" path="res://addons/linkux/core/network_events.gd" id="2"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/tick_manager.gd" id="3"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/session_manager.gd" id="4"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/authority_manager.gd" id="5"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/state_replicator.gd" id="6"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/rpc_relay.gd" id="7"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/scene_sync.gd" id="8"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/disconnect_handler.gd" id="9"]
-[ext_resource type="Script" path="res://addons/linkux/subsystems/late_join_handler.gd" id="10"]
-[ext_resource type="Script" path="res://addons/linkux/transport/transport_layer.gd" id="11"]
-[ext_resource type="Script" path="res://addons/linkux/optimization/interest_manager.gd" id="12"]
+[ext_resource type="Script" uid="uid://cqqum3npyrspj" path="res://addons/linkux/linkux.gd" id="1"]
+[ext_resource type="Script" uid="uid://bda4j6kr44k5w" path="res://addons/linkux/core/network_events.gd" id="2"]
+[ext_resource type="Script" uid="uid://xyj073wy73ay" path="res://addons/linkux/subsystems/tick_manager.gd" id="3"]
+[ext_resource type="Script" uid="uid://bnt2scvfovd4c" path="res://addons/linkux/subsystems/session_manager.gd" id="4"]
+[ext_resource type="Script" uid="uid://chkhbtuxgmxrf" path="res://addons/linkux/subsystems/authority_manager.gd" id="5"]
+[ext_resource type="Script" uid="uid://d17mv2psi46fh" path="res://addons/linkux/subsystems/state_replicator.gd" id="6"]
+[ext_resource type="Script" uid="uid://ydd72cb5dlom" path="res://addons/linkux/subsystems/rpc_relay.gd" id="7"]
+[ext_resource type="Script" uid="uid://bhc8fc6j1h2ta" path="res://addons/linkux/subsystems/scene_sync.gd" id="8"]
+[ext_resource type="Script" uid="uid://cavqwj1pbwdad" path="res://addons/linkux/subsystems/disconnect_handler.gd" id="9"]
+[ext_resource type="Script" uid="uid://btn1bcb5wjof6" path="res://addons/linkux/subsystems/late_join_handler.gd" id="10"]
+[ext_resource type="Script" uid="uid://cvefajfl4po4y" path="res://addons/linkux/transport/transport_layer.gd" id="11"]
+[ext_resource type="Script" uid="uid://dbg0aba63gldh" path="res://addons/linkux/optimization/interest_manager.gd" id="12"]
 
-[node name="LinkUx" type="Node"]
+[node name="LinkUx" type="Node" unique_id=1461349523]
 script = ExtResource("1")
 
-[node name="NetworkEvents" type="Node" parent="."]
+[node name="NetworkEvents" type="Node" parent="." unique_id=1387303637]
 script = ExtResource("2")
 
-[node name="TickManager" type="Node" parent="."]
+[node name="TickManager" type="Node" parent="." unique_id=411477471]
 script = ExtResource("3")
 
-[node name="SessionManager" type="Node" parent="."]
+[node name="SessionManager" type="Node" parent="." unique_id=1100589717]
 script = ExtResource("4")
 
-[node name="AuthorityManager" type="Node" parent="."]
+[node name="AuthorityManager" type="Node" parent="." unique_id=877073886]
 script = ExtResource("5")
 
-[node name="StateReplicator" type="Node" parent="."]
+[node name="StateReplicator" type="Node" parent="." unique_id=1323525874]
 script = ExtResource("6")
 
-[node name="RpcRelay" type="Node" parent="."]
+[node name="RpcRelay" type="Node" parent="." unique_id=1581000269]
 script = ExtResource("7")
 
-[node name="SceneSync" type="Node" parent="."]
+[node name="SceneSync" type="Node" parent="." unique_id=1524438916]
 script = ExtResource("8")
 
-[node name="DisconnectHandler" type="Node" parent="."]
+[node name="DisconnectHandler" type="Node" parent="." unique_id=440472189]
 script = ExtResource("9")
 
-[node name="LateJoinHandler" type="Node" parent="."]
+[node name="LateJoinHandler" type="Node" parent="." unique_id=2035344013]
 script = ExtResource("10")
 
-[node name="TransportLayer" type="Node" parent="."]
+[node name="TransportLayer" type="Node" parent="." unique_id=116496703]
 script = ExtResource("11")
 
-[node name="InterestManager" type="Node" parent="."]
+[node name="InterestManager" type="Node" parent="." unique_id=318874344]
 script = ExtResource("12")

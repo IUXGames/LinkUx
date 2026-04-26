@@ -131,7 +131,8 @@ func _ready() -> void:
 # ══════════════════════════════════════════════════════════════════════════════
 
 func initialize(config: LinkUxConfig = null) -> int:
-	await LinkUx.ready
+	if not is_node_ready():
+		await ready
 	_config = config if config else LinkUxConfig.new()
 	if not _config.network: _config.network = NetworkConfig.new()
 	if not _config.lan: _config.lan = LanBackendConfig.new()
