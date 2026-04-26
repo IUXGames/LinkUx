@@ -492,20 +492,31 @@ func is_online() -> bool:
 # ══════════════════════════════════════════════════════════════════════════════
 
 ## Initializes the Steam API with the given AppID.
+## Returns the Steam singleton object at runtime, or null if GodotSteam is not installed.
+## Using Engine.get_singleton() avoids parser-time errors when GodotSteam is absent.
+func _get_steam_singleton() -> Object:
+	if ClassDB.class_exists("Steam"):
+		return Engine.get_singleton("Steam")
+	return null
+
+
 ## Writes steam_appid.txt next to the executable (or project root in editor) before calling
 ## steamInitEx so Steam's DLL picks up the AppID regardless of project settings.
 ## Returns true on success, false if GodotSteam is unavailable or Steam is not running.
 func initialize_steam(app_id: int = 480) -> bool:
 	if _steam_initialized:
 		return true
-	if not ClassDB.class_exists("Steam"):
+	var steam := _get_steam_singleton()
+	if steam == null:
 		_logger.warn("Steam class not found — GodotSteam GDExtension may not be installed.", "Steam")
 		return false
 	_write_steam_appid_file(app_id)
-	var result: Dictionary = Steam.steamInitEx(false, app_id)
-	if result.get("status") == Steam.STEAM_API_INIT_RESULT_OK:
+	var result: Dictionary = steam.steamInitEx(false, app_id)
+	# STEAM_API_INIT_RESULT_OK == 0 — compared by value to avoid a parser-time
+	# reference to Steam.STEAM_API_INIT_RESULT_OK when GodotSteam is absent.
+	if result.get("status", -1) == 0:
 		_steam_initialized = true
-		_logger.info("Steam initialized. User: %s (AppID: %d)" % [Steam.getPersonaName(), app_id], "Steam")
+		_logger.info("Steam initialized. User: %s (AppID: %d)" % [steam.getPersonaName(), app_id], "Steam")
 		return true
 	_logger.warn("Steam initialization failed: %s" % result.get("verbal", "unknown"), "Steam")
 	return false
@@ -521,9 +532,10 @@ func is_steam_initialized() -> bool:
 func get_steam_user() -> String:
 	if not _steam_initialized:
 		return ""
-	if not ClassDB.class_exists("Steam"):
+	var steam := _get_steam_singleton()
+	if steam == null:
 		return ""
-	return Steam.getPersonaName()
+	return steam.getPersonaName()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
