@@ -1,7 +1,7 @@
 # LinkUx
 
 [![Godot 4](https://img.shields.io/badge/Godot-4.4+-478cbf?logo=godotengine&logoColor=white)](https://godotengine.org/)
-[![Version](https://img.shields.io/badge/version-2.1.1-8435c4)](./plugin.cfg)
+[![Version](https://img.shields.io/badge/version-2.1.2-8435c4)](./plugin.cfg)
 
 **LinkUx** is a **multiplayer abstraction addon** for [**Godot 4**](https://godotengine.org/). It exposes one high-level **Autoload API** (`LinkUx`) while routing traffic through **pluggable backends**—**LAN (ENet)** and **Online (Steam)**—so gameplay code stays the same whether players join over the local network or the internet.
 
@@ -201,5 +201,5 @@ addons/linkux/
 
 ## 🙏 Credits
 
-- **LinkUx** — **IUX Games**, **Isaackiux** · version **2.1.1** (see [`plugin.cfg`](./plugin.cfg)).
+- **LinkUx** — **IUX Games**, **Isaackiux** · version **2.1.2** (see [`plugin.cfg`](./plugin.cfg)).
 - **GodotSteam** — [Gramps](https://godotsteam.com/) · used as the transport layer for the Steam Online backend.
